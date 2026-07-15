@@ -53,6 +53,12 @@
 - デイリーチャレンジ(日付シードで配置固定)
 - 歴史上人物パック(読みの揺れ・視覚素材が課題。家紋風一文字+名前案あり)
 
+## 共有(GitHub)
+
+- 2026-07-15 Git管理開始(main)。GitHub Pagesでの公開を予定。
+- リポジトリ作成・push後にやること: ①Settings→PagesでmainブランチをServe ②README.mdのプレイURL(USERNAME部分)を実URLに差し替え。
+- 公開URL形式: `https://<ユーザー名>.github.io/puyotori/shiritori3d.html`
+
 ## 方針メモ
 
 - 単一HTML・外部依存なしを維持する(オフラインでも動くこと)。
