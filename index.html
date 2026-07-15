@@ -162,6 +162,13 @@
     background: #31406e;
   }
   #resultTitle { font-size: 34px; margin: 0 0 10px; }
+  @media (max-width: 480px){
+    .panel { padding: 20px 16px; }
+    .panel h1 { font-size: 24px; }
+    .panel h1 .mini { font-size: 12px; }
+    .rules { font-size: 13px; line-height: 1.8; margin: 14px 0 16px; }
+    .btnrow button { font-size: 14px; padding: 10px 14px; }
+  }
   #resultDetail { font-size: 15px; color: #ccd6f5; line-height: 1.8; margin-bottom: 18px; }
   #resultChain {
     font-size: 13px; color: #8fa2d8; line-height: 1.7;
@@ -196,12 +203,10 @@
     <h1>しりとりハント3D<span class="mini">— 大人のための 早い者勝ち 3Dしりとり —</span></h1>
     <div id="recordLine" style="font-size:13px;color:#8fa2d8;min-height:18px;margin-top:6px"></div>
     <div class="rules">
-      🌌 <b>ドラッグ</b>で見回す。答えは大抵、見ていない方角にあります<br>
-      👆 お題の文字で始まるものを<b>長押し</b>、または<b>ダブルクリックしたまま ぐるっと囲んで</b>捕獲。網は経費で落ちません<br>
-      📏 <b>長い言葉</b>ほど高得点。ただし小さく、すばしっこい<br>
-      🛸 ライバルUFOが同じ答えを狙っています。<b>社会は早い者勝ち</b>です<br>
-      ⚠️ 「<b>ん</b>」で終わる言葉は取ってはいけません。<b>人生の落とし穴</b>です<br>
-      ⚡ 残り10秒は<b>得点2倍</b>。締切前だけ本気が出る、あれです
+      🌌 ドラッグで見回す<br>
+      👆 <b>長押し</b>、または<b>2回タップして囲む</b>と捕獲<br>
+      🛸 UFOより先に。<b>長い言葉ほど高得点</b><br>
+      ⚠️ 「<b>ん</b>」で終わる言葉は<b>罠</b>。人生と同じです
     </div>
     <div style="font-size:13px;color:#8fa2d8;margin-bottom:6px">ことばセット（漢字は「読み」でしりとり）</div>
     <div class="btnrow" style="margin-bottom:16px">
