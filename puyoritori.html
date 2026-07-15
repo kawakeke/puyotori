@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ぷよりとり</title>
+<style>
+  body {
+    background: #222a35;
+    color: #eee;
+    font-family: "Hiragino Sans", "Meiryo", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 16px;
+  }
+  h1 { margin: 4px 0 12px; font-size: 22px; }
+  #fields {
+    display: flex;
+    gap: 24px;
+  }
+  .field-wrap { text-align: center; }
+  .field-wrap h2 { margin: 0 0 6px; font-size: 16px; }
+  canvas {
+    background: #10141a;
+    border: 3px solid #555;
+    border-radius: 6px;
+  }
+  #controls {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  #status { font-size: 15px; min-height: 22px; }
+  #required { font-size: 20px; font-weight: bold; color: #ffd966; }
+  #inputRow { display: flex; gap: 8px; }
+  #wordInput {
+    font-size: 16px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #888;
+    width: 220px;
+  }
+  button {
+    font-size: 15px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    border: none;
+    background: #4d7cff;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:hover { background: #6f93ff; }
+  button:disabled { background: #555; cursor: default; }
+  #log {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #aab;
+    max-width: 600px;
+    text-align: center;
+  }
+  #message {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ff6666;
+    min-height: 30px;
+  }
+</style>
+</head>
+<body>
+<h1>ぷよりとり</h1>
+<div id="fields">
+  <div class="field-wrap">
+    <h2>あなた</h2>
+    <canvas id="playerCanvas"></canvas>
+  </div>
+  <div class="field-wrap">
+    <h2>CPU</h2>
+    <canvas id="cpuCanvas"></canvas>
+  </div>
+</div>
+
+<div id="controls">
+  <div id="message"></div>
+  <div>次は「<span id="required">しりとり開始</span>」から始まる言葉</div>
+  <div id="inputRow">
+    <input id="wordInput" type="text" placeholder="ひらがなで入力" autocomplete="off">
+    <button id="submitBtn">答える</button>
+  </div>
+  <div id="status"></div>
+  <div>スコア: <span id="score">0</span></div>
+</div>
+<div id="log"></div>
+
+<script>
+(function(){
+  const COLS = 6, ROWS = 13, CELL = 32;
+  const COLORS = ["#ff4d4d", "#4dff88", "#4d8dff", "#ffe14d", "#c64dff"];
+
+  const playerCanvas = document.getElementById("playerCanvas");
+  const cpuCanvas = document.getElementById("cpuCanvas");
+  [playerCanvas, cpuCanvas].forEach(c => { c.width = COLS*CELL; c.height = ROWS*CELL; });
+  const pctx = playerCanvas.getContext("2d");
+  const cctx = cpuCanvas.getContext("2d");
+
+  const wordInput = document.getElementById("wordInput");
+  const submitBtn = document.getElementById("submitBtn");
+  const statusEl = document.getElementById("status");
+  const requiredEl = document.getElementById("required");
+  const scoreEl = document.getElementById("score");
+  const logEl = document.getElementById("log");
+  const messageEl = document.getElementById("message");
+
+  // --- 辞書: ひらがな単語 (ん で終わらないもの) ---
+  const DICT = [
+    "しりとり","りんご","ごりら","らくだ","だちょう","うちわ","わかめ","めだか","かえる","るすばん",
+    "ばった","たいこ","こねこ","こあら","あひる","るり","りす","すいか","かに","にわとり",
+    "とけい","いす","すずめ","めがね","ねこ","こま","まり","りぼん","いぬ","ぬいぐるみ",
+    "みかん","かさ","さる","らっぱ","ぱせり","りんかく","くも","もも","もぐら","らじお",
+    "おに","にじ","じてんしゃ","しろくま","まくら","くらげ","げんき","きつね","ねずみ","みみず",
+    "ずきん","んきょ","ぼうし","しまうま","まつり","りゆう","うさぎ","ぎんが","がいこつ","つき",
+    "きつつき","きりがみ","みかづき","きょうりゅう","うきわ","わた","たいよう","ようふく","くじゃく","くるみ",
+    "みず","ずつう","うちゅう","うで","てんとうむし","しっぽ","ぽすと","とんぼ","ぼたん","だんご",
+    "ごぼう","うちゅうじん","じゃがいも","もくば","ばいおりん","たまご","ごはん","はんかち","ちず",
+    "ずかん","かんけり","りんごあめ","めいろ","ろうそく","くるま","まと","とまと","いるか","かもしか",
+    "かいだん","せみ","みかげ","げた","たこ","こけし","しか","かぶ","ぶどう",
+    "くじら","らいおん","かいすいよく","くしゃみ","みそ","そら","らくがき","きのこ","こおり",
+    "すし","しお","せかい","いか","かがみ","ひつじ","じしゃく","くつ","つばめ","めんどり"
+  ];
+  // remove duplicates and any accidental ん endings or empty strings
+  const dictSet = new Set(DICT.filter(w => w && !w.endsWith("ん")));
+  const dictionary = Array.from(dictSet);
+
+  function colorIndexForChar(ch) {
+    const code = ch.codePointAt(0);
+    return code % COLORS.length;
+  }
+
+  function makeGrid() {
+    const grid = [];
+    for (let r = 0; r < ROWS; r++) grid.push(new Array(COLS).fill(null));
+    return grid;
+  }
+
+  const state = {
+    playerGrid: makeGrid(),
+    cpuGrid: makeGrid(),
+    score: 0,
+    usedWords: new Set(),
+    requiredKana: null, // next required starting kana
+    gameOver: false,
+    busy: false
+  };
+
+  function drawGrid(ctx, grid) {
+    ctx.clearRect(0, 0, COLS*CELL, ROWS*CELL);
+    // grid lines
+    ctx.strokeStyle = "#2a3340";
+    for (let c = 0; c <= COLS; c++) {
+      ctx.beginPath();
+      ctx.moveTo(c*CELL, 0);
+      ctx.lineTo(c*CELL, ROWS*CELL);
+      ctx.stroke();
+    }
+    for (let r = 0; r <= ROWS; r++) {
+      ctx.beginPath();
+      ctx.moveTo(0, r*CELL);
+      ctx.lineTo(COLS*CELL, r*CELL);
+      ctx.stroke();
+    }
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const cell = grid[r][c];
+        if (cell) drawPuyo(ctx, c, r, cell);
+      }
+    }
+  }
+
+  function drawPuyo(ctx, c, r, cell) {
+    const x = c*CELL + CELL/2;
+    const y = r*CELL + CELL/2;
+    ctx.beginPath();
+    ctx.arc(x, y, CELL/2 - 3, 0, Math.PI*2);
+    ctx.fillStyle = COLORS[cell.color];
+    ctx.fill();
+    ctx.strokeStyle = "#000a";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "#10141a";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(cell.char, x, y+1);
+  }
+
+  function renderAll() {
+    drawGrid(pctx, state.playerGrid);
+    drawGrid(cctx, state.cpuGrid);
+    scoreEl.textContent = state.score;
+  }
+
+  function sleep(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+  // Drop a chain of chars (array of characters) into target grid, into a column,
+  // settling like puyo (each char falls individually as part of a vertical chain order,
+  // but they land stacked from bottom up in the chosen column; if column overflows, spill to next column).
+  async function dropWordChain(grid, ctx, word) {
+    const chars = Array.from(word);
+    let col = 0;
+    // choose starting column = column with most empty space (least filled) for variety
+    let bestCol = 0, bestEmpty = -1;
+    for (let c = 0; c < COLS; c++) {
+      let empty = 0;
+      for (let r = 0; r < ROWS; r++) if (!grid[r][c]) empty++;
+      if (empty > bestEmpty) { bestEmpty = empty; bestCol = c; }
+    }
+    col = bestCol;
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i];
+      const colorIdx = colorIndexForChar(ch);
+      // find landing row in current col, scanning columns rightwards if full
+      let placed = false;
+      let tryCol = col;
+      let attempts = 0;
+      while (!placed && attempts < COLS) {
+        let landingRow = -1;
+        for (let r = ROWS - 1; r >= 0; r--) {
+          if (!grid[r][tryCol]) { landingRow = r; break; }
+        }
+        if (landingRow === -1) {
+          tryCol = (tryCol + 1) % COLS;
+          attempts++;
+          continue;
+        }
+        grid[landingRow][tryCol] = { char: ch, color: colorIdx };
+        placed = true;
+        col = tryCol; // continue chain near same area
+      }
+      renderAll();
+      await sleep(140);
+      if (!placed) {
+        // field is completely full
+        return false; // overflow signal
+      }
+    }
+    return true;
+  }
+
+  function findMatches(grid) {
+    const visited = Array.from({length: ROWS}, () => new Array(COLS).fill(false));
+    const groups = [];
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        if (!grid[r][c] || visited[r][c]) continue;
+        const color = grid[r][c].color;
+        const stack = [[r,c]];
+        const group = [];
+        visited[r][c] = true;
+        while (stack.length) {
+          const [cr, cc] = stack.pop();
+          group.push([cr, cc]);
+          const neighbors = [[cr-1,cc],[cr+1,cc],[cr,cc-1],[cr,cc+1]];
+          for (const [nr, nc] of neighbors) {
+            if (nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+            if (visited[nr][nc]) continue;
+            if (!grid[nr][nc]) continue;
+            if (grid[nr][nc].color !== color) continue;
+            visited[nr][nc] = true;
+            stack.push([nr,nc]);
+          }
+        }
+        if (group.length >= 4) groups.push(group);
+      }
+    }
+    return groups;
+  }
+
+  function applyGravity(grid) {
+    for (let c = 0; c < COLS; c++) {
+      const colVals = [];
+      for (let r = 0; r < ROWS; r++) if (grid[r][c]) colVals.push(grid[r][c]);
+      for (let r = 0; r < ROWS; r++) grid[r][c] = null;
+      let startRow = ROWS - colVals.length;
+      for (let i = 0; i < colVals.length; i++) grid[startRow+i][c] = colVals[i];
+    }
+  }
+
+  async function resolveChains(grid) {
+    let chainCount = 0;
+    while (true) {
+      const groups = findMatches(grid);
+      if (groups.length === 0) break;
+      chainCount++;
+      let cleared = 0;
+      for (const group of groups) {
+        for (const [r,c] of group) { grid[r][c] = null; cleared++; }
+      }
+      const chainBonus = Math.pow(2, chainCount - 1);
+      state.score += cleared * 10 * chainBonus;
+      renderAll();
+      await sleep(220);
+      applyGravity(grid);
+      renderAll();
+      await sleep(180);
+    }
+    return chainCount;
+  }
+
+  function isFieldOverflowing(grid) {
+    // overflow if top row has any puyo
+    for (let c = 0; c < COLS; c++) if (grid[0][c]) return true;
+    return false;
+  }
+
+  function lastEffectiveChar(word) {
+    // simplistic shiritori rule: use last character; treat ー (long vowel) by looking back
+    let chars = Array.from(word);
+    let last = chars[chars.length - 1];
+    if (last === "ー" && chars.length >= 2) last = chars[chars.length - 2];
+    // small tsu/small kana at the end are unusual; ignore special-casing beyond this
+    return last;
+  }
+
+  function smallToBig(ch) {
+    const map = { "ゃ":"や","ゅ":"ゆ","ょ":"よ","っ":"つ","ぁ":"あ","ぃ":"い","ぅ":"う","ぇ":"え","ぉ":"お" };
+    return map[ch] || ch;
+  }
+
+  function validateWord(word) {
+    if (!word) return "言葉を入力してください";
+    if (!/^[぀-ゟ]+$/.test(word)) return "ひらがなで入力してください";
+    if (state.usedWords.has(word)) return "もう使われた言葉です";
+    if (word.endsWith("ん")) return "「ん」で終わる言葉は使えません";
+    if (state.requiredKana) {
+      const firstChar = smallToBig(Array.from(word)[0]);
+      const required = smallToBig(state.requiredKana);
+      if (firstChar !== required) return `「${state.requiredKana}」から始まる言葉にしてください`;
+    }
+    return null;
+  }
+
+  function pickCpuWord() {
+    const required = state.requiredKana ? smallToBig(state.requiredKana) : null;
+    const candidates = dictionary.filter(w => {
+      if (state.usedWords.has(w)) return false;
+      if (w.endsWith("ん")) return false;
+      if (required) {
+        const fc = smallToBig(Array.from(w)[0]);
+        if (fc !== required) return false;
+      }
+      return true;
+    });
+    if (candidates.length === 0) return null;
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  function setMessage(text, color) {
+    messageEl.textContent = text;
+    messageEl.style.color = color || "#ff6666";
+  }
+
+  function endGame(loserLabel) {
+    state.gameOver = true;
+    submitBtn.disabled = true;
+    wordInput.disabled = true;
+    setMessage(`${loserLabel}のフィールドが埋まりました！ゲームオーバー`, "#ff6666");
+  }
+
+  function appendLog(text) {
+    const p = document.createElement("div");
+    p.textContent = text;
+    logEl.prepend(p);
+  }
+
+  async function handleSubmit() {
+    if (state.busy || state.gameOver) return;
+    const word = wordInput.value.trim();
+    const error = validateWord(word);
+    if (error) {
+      statusEl.textContent = error;
+      return;
+    }
+    statusEl.textContent = "";
+    state.busy = true;
+    submitBtn.disabled = true;
+    wordInput.disabled = true;
+
+    state.usedWords.add(word);
+    appendLog(`あなた: ${word}`);
+    requiredEl.textContent = "...";
+
+    const ok = await dropWordChain(state.cpuGrid, cctx, word);
+    await resolveChains(state.cpuGrid);
+    if (!ok || isFieldOverflowing(state.cpuGrid)) {
+      renderAll();
+      endGame("CPU");
+      return;
+    }
+
+    state.requiredKana = lastEffectiveChar(word);
+    requiredEl.textContent = state.requiredKana;
+    statusEl.textContent = "CPUが考え中...";
+    await sleep(500);
+
+    const cpuWord = pickCpuWord();
+    if (!cpuWord) {
+      setMessage("CPUは言葉が見つからず脱落！あなたの勝ち！", "#66ff99");
+      state.gameOver = true;
+      submitBtn.disabled = true;
+      wordInput.disabled = true;
+      return;
+    }
+    state.usedWords.add(cpuWord);
+    appendLog(`CPU: ${cpuWord}`);
+
+    const ok2 = await dropWordChain(state.playerGrid, pctx, cpuWord);
+    await resolveChains(state.playerGrid);
+    if (!ok2 || isFieldOverflowing(state.playerGrid)) {
+      renderAll();
+      endGame("あなた");
+      return;
+    }
+
+    state.requiredKana = lastEffectiveChar(cpuWord);
+    requiredEl.textContent = state.requiredKana;
+    statusEl.textContent = "";
+    state.busy = false;
+    submitBtn.disabled = false;
+    wordInput.disabled = false;
+    wordInput.value = "";
+    wordInput.focus();
+  }
+
+  submitBtn.addEventListener("click", handleSubmit);
+  wordInput.addEventListener("keydown", e => { if (e.key === "Enter") handleSubmit(); });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

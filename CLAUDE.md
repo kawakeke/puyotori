@@ -18,9 +18,9 @@
 
 ## ファイル
 
-- `shiritori3d.html` — **しりとりハント3D**(メイン開発中)。3D空間に浮かぶアイテムを長押しで捕まえる早い者勝ちしりとり。CPU(UFO)との対戦。
-- `index.html` — ぷよりとり(ぷよぷよ×しりとり)。初期の別ゲーム。基本触らない。
-- 動作確認: `.claude/launch.json` の static サーバー(python3 http.server, port 8731)で `/shiritori3d.html` を開く。
+- `index.html` — **しりとりハント3D**(メイン開発中)。3D空間に浮かぶアイテムを捕まえる早い者勝ちしりとり。CPU(UFO)との対戦。※GitHub PagesのルートURLで直接遊べるよう `shiritori3d.html` から改名(2026-07-15)。
+- `puyoritori.html` — ぷよりとり(ぷよぷよ×しりとり)。初期の別ゲーム。基本触らない(旧 `index.html`)。
+- 動作確認: `.claude/launch.json` の static サーバー(python3 http.server, port 8731)で `/` を開く。
 
 ## しりとりハント3D の設計
 
@@ -57,7 +57,7 @@
 
 - 2026-07-15 Git管理開始(main)。GitHub Pagesでの公開を予定。
 - リポジトリ作成・push後にやること: ①Settings→PagesでmainブランチをServe ②README.mdのプレイURL(USERNAME部分)を実URLに差し替え。
-- 公開URL形式: `https://<ユーザー名>.github.io/puyotori/shiritori3d.html`
+- 公開URL形式: `https://<ユーザー名>.github.io/puyotori/`(メインゲームが index.html なのでルートで遊べる)
 
 ## 方針メモ
 

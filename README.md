@@ -6,7 +6,7 @@
 
 ## あそびかた
 
-**[▶ ここで遊べます](https://USERNAME.github.io/puyotori/shiritori3d.html)** ※Pages有効化後にURLを差し替え
+**[▶ ここで遊べます](https://USERNAME.github.io/puyotori/)** ※Pages有効化後にURLを差し替え
 
 - **ドラッグ** — 3D空間を見回す(答えは大抵、見ていない方角にあります)
 - **長押し** or **ダブルクリックしたまま ぐるっと囲む** — 捕獲
@@ -17,15 +17,15 @@
 
 ## 技術メモ
 
-- 依存ライブラリなし・ビルド不要の**単一HTMLファイル**(`shiritori3d.html`)。オフラインでも動きます
+- 依存ライブラリなし・ビルド不要の**単一HTMLファイル**(`index.html`)。オフラインでも動きます
 - 3D描画は自作の生WebGL(世界)+ Canvas 2D(UI)の2層構成。three.js不使用
-- `index.html` は初期に作った別ゲーム「ぷよりとり」です
+- `puyoritori.html` は初期に作った別ゲーム「ぷよりとり」です
 
 ## ローカルで動かす
 
 ```
 python3 -m http.server 8731
-# → http://localhost:8731/shiritori3d.html
+# → http://localhost:8731/
 ```
 
 (file:// で直接開いても動きます)
