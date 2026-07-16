@@ -162,6 +162,61 @@
     background: #31406e;
   }
   #resultTitle { font-size: 34px; margin: 0 0 10px; }
+  /* ---------- イントロ (辞令) ---------- */
+  #introScene {
+    position: relative;
+    height: 150px;
+    margin: 4px 0 12px;
+    overflow: hidden;
+  }
+  #introUfo {
+    font-size: 44px;
+    position: absolute; left: 50%; top: 4px;
+    animation: ufoHover 3.2s ease-in-out infinite;
+  }
+  @keyframes ufoHover {
+    0%, 100% { transform: translate(-62%, 0); }
+    50%      { transform: translate(-38%, 9px); }
+  }
+  #introBeam {
+    position: absolute; left: 50%; top: 48px;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 30px solid transparent;
+    border-right: 30px solid transparent;
+    border-bottom: 62px solid rgba(140, 240, 255, .16);
+    animation: beamPulse 2s ease-in-out infinite;
+  }
+  @keyframes beamPulse { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+  #introJapan {
+    font-size: 58px;
+    position: absolute; left: 50%; bottom: 0;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 14px rgba(80, 160, 255, .55));
+  }
+  #introText {
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.95;
+    color: #ccd6f5;
+    margin: 0 0 18px;
+  }
+  #introText .jirei {
+    display: block;
+    text-align: center;
+    font-size: 17px;
+    letter-spacing: 6px;
+    color: #eef2ff;
+    margin-bottom: 8px;
+  }
+  #introText .warn { color: #ffd966; }
+  #storyLink {
+    font-size: 12px;
+    color: #8fa2d8;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 4px;
+  }
   @media (max-width: 480px){
     .panel { padding: 20px 16px; }
     .panel h1 { font-size: 24px; }
@@ -190,7 +245,7 @@
       <div id="timebarBg"><div id="timebar"></div></div>
       <div id="timeleft">90</div>
     </div>
-    <div class="scorebox" id="scoreCpu">🛸 相手<b>0</b></div>
+    <div class="scorebox" id="scoreCpu">🛸 同期<b>0</b></div>
     <button id="btnSurrender">降参</button>
   </div>
   <div id="odai">「<span class="kana" id="odaiKana">り</span>」から始まるものを回収せよ</div>
@@ -199,14 +254,35 @@
 <div id="chain" style="display:none"></div>
 
 <div id="overlay">
+  <div class="panel" id="introPanel" style="display:none">
+    <div id="introScene">
+      <div id="introUfo">🛸</div>
+      <div id="introBeam"></div>
+      <div id="introJapan">🗾</div>
+    </div>
+    <div id="introText">
+      <span class="jirei">【辞　令】</span>
+      あなたを 地球・日本方面 <b>潜入要員</b>に任命する。<br>
+      着任前に、現地語の実地研修を命ずる。<br>
+      <br>
+      課題は「<b>しりとり</b>」。現地の言語遊戯である。<br>
+      <span class="warn">「ん」で終わる語は正体が露見するため回収禁止。</span><br>
+      なお、<b>同期</b>も同じ言葉を狙っている。<br>
+      成績は母星に報告される。健闘を祈る。
+    </div>
+    <div class="btnrow">
+      <button id="btnIntroNext" style="background:#4d7cff">研修をはじめる</button>
+    </div>
+  </div>
   <div class="panel" id="startPanel">
-    <h1>しりとりハント3D<span class="mini">— 大人のための 早い者勝ち 3Dしりとり —</span></h1>
+    <h1>しりとりハント3D<span class="mini">— 地球潜入研修・日本語実習 —</span></h1>
     <div id="recordLine" style="font-size:13px;color:#8fa2d8;min-height:18px;margin-top:6px"></div>
+    <div id="storyLink">▶ 辞令を読み直す</div>
     <div class="rules">
       🌌 ドラッグで見回す<br>
-      👆 <b>長押し</b>、または<b>2回タップして囲む</b>と捕獲<br>
-      🛸 UFOより先に。<b>長い言葉ほど高得点</b><br>
-      ⚠️ 「<b>ん</b>」で終わる言葉は<b>罠</b>。人生と同じです
+      👆 <b>長押し</b>、または<b>2回タップして囲む</b>と回収<br>
+      🛸 <b>同期</b>より先に。<b>長い言葉ほど高得点</b><br>
+      ⚠️ 「<b>ん</b>」で終わる言葉は禁句。<b>正体が露見します</b>
     </div>
     <div style="font-size:13px;color:#8fa2d8;margin-bottom:6px">ことばセット</div>
     <div class="btnrow" style="margin-bottom:16px">
@@ -937,6 +1013,9 @@ function drawWorld(){
     drawBillboard(vp, worldPos(n.az, n.el, n.r), n.size, n.size, glowTex,
       [c[0]/255, c[1]/255, c[2]/255, 0.18], 0);
   }
+  // 眼下の地球 (夜の日本上空に浮いている、という設定)
+  drawBillboard(vp, [0, -26, 0], 22, 22, glowTex, [0.25, 0.5, 0.85, 0.4], 0);
+  drawBillboard(vp, [0, -24, 0], 9, 9, glowTex, [1.0, 0.72, 0.35, 0.3], 0);
 
   // UFO (ライティング付き回転メッシュ) + グロー + トレイル
   if (state.running){
@@ -1140,11 +1219,11 @@ function addMsg(text, color, small){
 }
 /* トラップを踏んだあとの ひとこと (真顔) */
 const TRAP_QUIPS = [
-  "これだから月曜は。",
+  "母星に報告されました。",
+  "研修日誌に記録されました。",
   "見なかったことにしましょう。",
   "誰にでもあります。たぶん。",
-  "報告書は不要です。",
-  "深呼吸を推奨します。"
+  "深呼吸を推奨します。地球の空気ですが。"
 ];
 function shake(amp){ state.shake = { start: now, amp }; }
 function burst(x, y, color, n){
@@ -1254,7 +1333,7 @@ function cpuPick(item){
   flash("255,90,90", 0.14);
   shake(3);
   takeWord(item, "cpu");
-  addMsg(`🛸 相手が「${itemDisp(item)}」を回収しました`, "#ff9d9d");
+  addMsg(`🛸 同期が「${itemDisp(item)}」を回収しました`, "#ff9d9d");
   updateCombo();
   sndCpu();
 }
@@ -1345,7 +1424,7 @@ canvas.addEventListener("pointerdown", e => {
   if (isDouble){
     // ダブルクリックしたまま描く → なわ(囲い)モード
     if (now < state.stunUntil){
-      addMsg("現在、動けません。心当たりはあるはずです。", "#ff9d9d");
+      addMsg("動けません。正体を疑われています。", "#ff9d9d");
       pointer.mode = "drag";
       return;
     }
@@ -1356,7 +1435,7 @@ canvas.addEventListener("pointerdown", e => {
   const it = hitTest(e.clientX, e.clientY);
   if (it){
     if (now < state.stunUntil){
-      addMsg("現在、動けません。心当たりはあるはずです。", "#ff9d9d");
+      addMsg("動けません。正体を疑われています。", "#ff9d9d");
       pointer.mode = "drag";
       return;
     }
@@ -1409,7 +1488,7 @@ function lassoMove(x, y){
   }
   if (hits.length){
     if (now < state.stunUntil){
-      addMsg("現在、動けません。心当たりはあるはずです。", "#ff9d9d");
+      addMsg("動けません。正体を疑われています。", "#ff9d9d");
     } else {
       for (const it of hits) captureItem(it);
     }
@@ -1731,7 +1810,7 @@ function loop(t){
     // ひとこと (真顔の進行アナウンス)
     if (!state.q45 && state.timeLeft <= 45){
       state.q45 = true;
-      addMsg("折り返しです。人生で言うと、だいたい今ぐらいです。", "#9aa7cf", true);
+      addMsg("折り返しです。地球の時間は、容赦がありません。", "#9aa7cf", true);
     }
     if (!state.q30 && state.timeLeft <= 30){
       state.q30 = true;
@@ -1740,7 +1819,7 @@ function loop(t){
     // 残り10秒はボーナスタイム
     if (!state.bonus && state.timeLeft <= 10 && state.timeLeft > 0){
       state.bonus = true;
-      addMsg("⚡ 締切効果、発動。得点 ×2", "#ffe066");
+      addMsg("⚡ 夜明けが近い。得点 ×2", "#ffe066");
       flash("255,215,90", 0.2);
       beep(880, .12, "sine", .12); beep(1320, .2, "sine", .12, .1);
     }
@@ -1853,15 +1932,15 @@ function startGame(diffKey){
   hud.style.display = "";
   chainEl.style.display = "";
   updateHud();
-  addMsg(`まずは「${state.requiredKana}」から。肩の力を抜いていきましょう。`, "#8fd8ff");
+  addMsg(`研修開始。まずは「${state.requiredKana}」から。`, "#8fd8ff");
 }
 
 function bitterComment(you, cp){
-  if (you > cp * 2 && you > 0) return "圧勝です。この集中力、平日にも少し分けてあげてください。";
-  if (you > cp) return "勝ちました。今日はもう、何もしなくていい日です。";
-  if (you === cp) return "引き分け。白黒つかないのが大人の世界です。";
-  if (you * 2 < cp) return "完敗です。UFOにも負ける日があります。今日がその日でした。";
-  return "惜敗。まあ、勝ち負けが全てではないですし。ね。";
+  if (you > cp * 2 && you > 0) return "即戦力認定です。母星が誇りに思うでしょう。たぶん。";
+  if (you > cp) return "修了です。日本で、うまくやってください。";
+  if (you === cp) return "保留。母星も判断に迷っています。";
+  if (you * 2 < cp) return "同期はもう日本に発ちました。あなたはここで、もう90秒です。";
+  return "再研修です。よくあることです。よくあってはいけないのですが。";
 }
 
 function endGame(reason){
@@ -1869,14 +1948,14 @@ function endGame(reason){
   state.running = false;
   holding = null;
   const you = state.scoreYou, cp = state.scoreCpu;
-  const title = you > cp ? "🏆 勝利" : you < cp ? "🛸 敗北" : "🤝 引き分け";
+  const title = you > cp ? "🎓 研修修了" : you < cp ? "🔁 再研修" : "📎 判定保留";
   if (you > cp) record.w++; else if (you < cp) record.l++; else record.d++;
   saveRecord();
   document.getElementById("resultTitle").textContent = title;
   document.getElementById("resultDetail").innerHTML =
     `<i style="color:#9aa7cf">${bitterComment(you, cp)}</i><br><br>` +
     (reason === "ことばぎれ" ? "辞書の言葉を使い切りました。<br>" : "") +
-    `あなた <b style="color:#ffd966">${you}</b> — 相手 <b style="color:#ff8a8a">${cp}</b><br>` +
+    `あなた <b style="color:#ffd966">${you}</b> — 同期 <b style="color:#ff8a8a">${cp}</b><br>` +
     `つないだ言葉: ${state.chainLog.length - 1}` +
     (state.bestWord ? `<br>最長回収: <b style="color:#ffd966">${state.bestDisp}</b> (+${wordPoints(state.bestWord)})` : "") +
     `<br>通算成績: ${recordText()}`;
@@ -1885,6 +1964,31 @@ function endGame(reason){
   resultPanel.style.display = "";
   overlayEl.classList.remove("hidden");
 }
+
+/* イントロ (辞令) の表示制御 */
+const introPanel = document.getElementById("introPanel");
+function showIntro(){
+  startPanel.style.display = "none";
+  resultPanel.style.display = "none";
+  introPanel.style.display = "";
+  overlayEl.classList.remove("hidden");
+}
+function showStart(){
+  introPanel.style.display = "none";
+  resultPanel.style.display = "none";
+  startPanel.style.display = "";
+  updateRecordLine();
+}
+document.getElementById("btnIntroNext").addEventListener("click", () => {
+  try { localStorage.setItem("shiritori3d_introSeen", "1"); } catch(e){ /* noop */ }
+  showStart();
+});
+document.getElementById("storyLink").addEventListener("click", showIntro);
+(() => {
+  let seen = false;
+  try { seen = !!localStorage.getItem("shiritori3d_introSeen"); } catch(e){ /* noop */ }
+  if (!seen) showIntro();
+})();
 
 let selectedPack = "bitter";
 const packBtns = {
