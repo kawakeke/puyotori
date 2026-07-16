@@ -57,6 +57,7 @@
 ## 共有(GitHub)
 
 - 2026-07-15 Git管理開始(main)。GitHub Pagesでの公開を予定。
+- **リモート(origin)設定後は、変更作業の区切りごとに必ず commit + push すること**(ユーザー希望の自動更新運用 2026-07-16)。push すれば Pages は自動で再デプロイされる。
 - リポジトリ作成・push後にやること: ①Settings→PagesでmainブランチをServe ②README.mdのプレイURL(USERNAME部分)を実URLに差し替え。
 - 公開URL形式: `https://<ユーザー名>.github.io/puyotori/`(メインゲームが index.html なのでルートで遊べる)
 
