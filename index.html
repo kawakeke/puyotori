@@ -208,7 +208,7 @@
       🛸 UFOより先に。<b>長い言葉ほど高得点</b><br>
       ⚠️ 「<b>ん</b>」で終わる言葉は<b>罠</b>。人生と同じです
     </div>
-    <div style="font-size:13px;color:#8fa2d8;margin-bottom:6px">ことばセット（漢字は「読み」でしりとり）</div>
+    <div style="font-size:13px;color:#8fa2d8;margin-bottom:6px">ことばセット</div>
     <div class="btnrow" style="margin-bottom:16px">
       <button id="packEmoji" class="packbtn">🍎 定番</button>
       <button id="packKanji" class="packbtn">難 漢字</button>
@@ -303,7 +303,9 @@ const DICT = [
   ["ぴあの","🎹"],["ぴざ","🍕"],
   ["ぷれぜんと","🎁"],["ぷりん","🍮"],
   ["ぺんき","🖌️"],["ぺんぎん","🐧"],
-  ["ぽすと","📮"],["ぽっぷこーん","🍿"]
+  ["ぽすと","📮"],["ぽっぷこーん","🍿"],
+  ["くれよん","🖍️"],["そろばん","🧮"],["しょくぱん","🍞"],["ふとん","🛏️"],
+  ["おでん","🍢"],["ようかん","🍡"],["らむね","🥤"],["わたあめ","🍬"]
 ].map(([w,e]) => ({ w, e, trap: w.endsWith("ん") }));
 
 /* むずかしい漢字セット: [漢字, よみ] — よみで しりとり */
@@ -369,7 +371,10 @@ const KANJI_DICT = [
   ["琵琶","びわ"],["屏風","びょうぶ"],
   ["葡萄","ぶどう"],["豚","ぶた"],
   ["紅","べに"],["弁当","べんとう"],
-  ["帽子","ぼうし"],["牡丹","ぼたん"]
+  ["帽子","ぼうし"],["牡丹","ぼたん"],
+  ["心太","ところてん"],["饂飩","うどん"],["素麺","そうめん"],["薬缶","やかん"],
+  ["金柑","きんかん"],["天秤","てんびん"],
+  ["蒟蒻","こんにゃく"],["案山子","かかし"],["蜜豆","みつまめ"]
 ].map(([k,w]) => ({ w, k, trap: w.endsWith("ん") }));
 
 /* ビターセット: 大人の悲哀ワード。「ん」で終わる語 = 人生の落とし穴(トラップ) */
@@ -436,7 +441,12 @@ const BITTER_DICT = [
   ["べつばら","🍰"],["べんとう","🍱"],
   ["ぼーなす","💰"],["ぼうねんかい","🍻"],["ぼっち","🍜"],
   ["ぷりんたい","🍺"],
-  ["ぽいかつ","📱"]
+  ["ぽいかつ","📱"],
+  ["しゃっきん","💸"],["じゅうたくろーん","🏠"],["きんきゅうあんけん","📞"],
+  ["じどうこうしん","🔁"],["かいやくきん","💸"],["ごうこん","🥂"],
+  ["けっさん","📊"],["ふっきん","💪"],["けっきん","🤒"],["わりびきけん","🎫"],
+  ["にじかい","🍻"],["しゅっちょう","🧳"],["さぶすく","📱"],
+  ["ねんまつちょうせい","🧾"],["まいほーむ","🏡"],["ごしゅうぎ","💴"]
 ].map(([w,e]) => ({ w, e, trap: w.endsWith("ん") }));
 
 const PACKS = { emoji: DICT, kanji: KANJI_DICT, bitter: BITTER_DICT };
@@ -454,9 +464,9 @@ function lastKana(w){
 /* ================= 定数 ================= */
 const HOLD_MS = 650;              // ながおし時間
 const GAME_SECONDS = 90;
-const FIELD_MIN_ITEMS = 30;       // フィールドのアイテム数
+const FIELD_MIN_ITEMS = 34;       // フィールドのアイテム数
 const MIN_ANSWERS = 3;            // つねに用意する正解の数
-const TRAP_CHANCE = 0.55;
+const TRAP_CHANCE = 0.7;
 const FOV = 78 * Math.PI / 180;
 
 /* pick: CPUの狙い方 min=安い言葉優先 max=高得点の言葉優先 */
@@ -1035,21 +1045,13 @@ function spawnItem(entry){
   const sizeF = Math.max(0.55, 1.18 - len * 0.11);
   const spd = 0.025 + (len - 2) * 0.02;
   const dir = Math.random() * Math.PI * 2;
-  // なるべく ほかのアイテムと かさならないところに わく
-  const alive = aliveItems();
-  let best = null, bestD = -1;
-  for (let k = 0; k < 12; k++){
-    const az = Math.random() * Math.PI * 2;
-    const el = Math.random() * 0.88 - 0.4;
-    let dmin = Infinity;
-    for (const o of alive) dmin = Math.min(dmin, Math.hypot(angDiff(az - o.az), el - o.el));
-    if (dmin > bestD){ bestD = dmin; best = { az, el }; }
-  }
   state.items.push({
     word: entry.w, emoji: entry.e || null, kanji: entry.k || null, trap: entry.trap,
     len, pts: wordPoints(entry.w), sizeF,
     vaz: Math.cos(dir) * spd, vel: Math.sin(dir) * spd,
-    az: best.az, el: best.el,
+    // 追加位置は完全ランダム (2026-07-16 ユーザー指定)
+    az: Math.random() * Math.PI * 2,
+    el: Math.random() * 0.88 - 0.4,
     r: 6 + Math.random() * 8,
     phase: Math.random() * Math.PI * 2,
     born: now,
@@ -1078,11 +1080,13 @@ function ensureAnswers(){
     reshuffleKana();
     return;
   }
-  // トラップ (お題ではじまり「ん」でおわる) をたまに混ぜる
-  const trapOnField = aliveItems().some(it => it.trap && firstKana(it.word) === state.requiredKana);
-  if (!trapOnField && Math.random() < TRAP_CHANCE){
+  // トラップ (お題ではじまり「ん」でおわる) を混ぜる (最大2つ)
+  let trapCount = aliveItems().filter(it => it.trap && firstKana(it.word) === state.requiredKana).length;
+  while (trapCount < 2 && Math.random() < TRAP_CHANCE){
     const traps = unusedEntries(d => d.trap && firstKana(d.w) === state.requiredKana);
-    if (traps.length) spawnItem(traps[Math.floor(Math.random() * traps.length)]);
+    if (!traps.length) break;
+    spawnItem(traps[Math.floor(Math.random() * traps.length)]);
+    trapCount++;
   }
   // にぎやかし
   while (aliveItems().length < FIELD_MIN_ITEMS){
