@@ -6,7 +6,7 @@
 
 ## あそびかた
 
-**[▶ ここで遊べます](https://USERNAME.github.io/puyotori/)** ※Pages有効化後にURLを差し替え
+**[▶ ここで遊べます](https://kawakeke.github.io/puyotori/)**
 
 - **ドラッグ** — 3D空間を見回す(答えは大抵、見ていない方角にあります)
 - **長押し** or **ダブルクリックしたまま ぐるっと囲む** — 捕獲
