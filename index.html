@@ -38,23 +38,26 @@
     display: flex; align-items: center; gap: 12px;
   }
   .scorebox {
-    background: rgba(10, 16, 34, .72);
-    border: 1px solid rgba(120, 150, 255, .35);
-    border-radius: 10px;
+    background: rgba(6, 18, 32, .8);
+    border: 1px solid rgba(90, 220, 255, .4);
+    border-radius: 2px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     padding: 6px 14px;
     font-size: 14px;
     min-width: 92px;
     text-align: center;
     backdrop-filter: blur(4px);
+    box-shadow: 0 0 14px rgba(60, 180, 255, .12);
   }
   .scorebox b { font-size: 20px; display: block; }
   #scoreYou b { color: #ffd966; }
   #scoreCpu b { color: #ff8a8a; }
   #timewrap { flex: 1; }
   #timebarBg {
-    height: 12px; border-radius: 6px;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.2);
+    height: 12px; border-radius: 2px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(90, 220, 255, .35);
+    box-shadow: 0 0 12px rgba(60, 180, 255, .15);
     overflow: hidden;
   }
   #timebar {
@@ -66,8 +69,8 @@
   #timeleft { text-align: center; font-size: 12px; margin-top: 2px; opacity: .85; }
   #btnSurrender {
     pointer-events: auto;
-    background: rgba(10, 16, 34, .72);
-    border: 1px solid rgba(255, 255, 255, .25);
+    background: rgba(6, 18, 32, .8);
+    border: 1px solid rgba(90, 220, 255, .3);
     color: #aab8e0;
     font-size: 12px;
     padding: 8px 12px;
@@ -78,13 +81,14 @@
   }
   #btnSurrender:hover { background: #31406e; color: #fff; }
   #odai {
-    background: rgba(10, 16, 34, .72);
-    border: 1px solid rgba(255, 217, 102, .5);
-    border-radius: 999px;
-    padding: 8px 22px;
+    background: rgba(6, 18, 32, .8);
+    border: 1px solid rgba(90, 220, 255, .55);
+    border-radius: 2px;
+    clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+    padding: 8px 30px;
     font-size: 17px;
     backdrop-filter: blur(4px);
-    box-shadow: 0 4px 18px rgba(0,0,0,.4);
+    box-shadow: 0 0 20px rgba(60, 180, 255, .18);
   }
   #odai .kana {
     display: inline-block;
@@ -123,17 +127,28 @@
   }
   #overlay.hidden { display: none; }
   .panel {
-    background: rgba(16, 22, 44, .95);
-    border: 1px solid rgba(120, 150, 255, .4);
-    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    background: rgba(6, 18, 32, .92);
+    border: 1px solid rgba(90, 220, 255, .5);
+    clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px);
     padding: 28px 34px;
     max-width: 480px;
     width: calc(100% - 48px);
     box-sizing: border-box;
     text-align: center;
-    box-shadow: 0 12px 48px rgba(0,0,0,.6);
+    box-shadow: 0 0 44px rgba(60, 180, 255, .14), inset 0 0 70px rgba(60, 180, 255, .05);
   }
-  .panel h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: 2px; }
+  .panel::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(0deg, rgba(120, 220, 255, .035) 0 1px, transparent 1px 3px);
+  }
+  .panel h1 {
+    margin: 0 0 4px; font-size: 30px; letter-spacing: 4px;
+    text-shadow: 0 0 18px rgba(120, 220, 255, .45);
+  }
   .panel h1 .mini { font-size: 15px; color: #8fa2d8; display: block; letter-spacing: 1px; margin-top: 4px; }
   .rules {
     text-align: left; font-size: 14px; line-height: 1.85;
@@ -144,11 +159,12 @@
   .btnrow button {
     font-size: 16px; font-family: inherit;
     padding: 12px 22px;
-    border-radius: 12px; border: none; cursor: pointer;
+    border-radius: 2px; border: none; cursor: pointer;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     color: #fff; font-weight: bold;
-    transition: transform .1s;
+    transition: transform .1s, filter .1s;
   }
-  .btnrow button:hover { transform: scale(1.06); }
+  .btnrow button:hover { transform: scale(1.06); filter: brightness(1.15); }
   #btnEasy   { background: #3aa864; }
   #btnNormal { background: #4d7cff; }
   #btnHard   { background: #d5544d; }
@@ -288,7 +304,7 @@
     <div class="btnrow" style="margin-bottom:16px">
       <button id="packEmoji" class="packbtn">🍎 定番</button>
       <button id="packKanji" class="packbtn">難 漢字</button>
-      <button id="packBitter" class="packbtn sel">🍺 ビター</button>
+      <button id="packBitter" class="packbtn sel">👔 サラリーマン</button>
     </div>
     <div class="btnrow">
       <button id="btnEasy">接待（易）</button>
@@ -300,7 +316,9 @@
     <h1 id="resultTitle"></h1>
     <div id="resultDetail"></div>
     <div id="resultChain"></div>
+    <div id="nextComment" style="font-size:13px;color:#8fd8ff;min-height:18px;margin-bottom:10px"></div>
     <div class="btnrow">
+      <button id="btnNext" style="background:#18a999;display:none"></button>
       <button id="btnRetry" style="background:#4d7cff">もういちど</button>
       <button id="btnTop" style="background:#555f7a">TOPへ戻る</button>
     </div>
@@ -522,7 +540,12 @@ const BITTER_DICT = [
   ["じどうこうしん","🔁"],["かいやくきん","💸"],["ごうこん","🥂"],
   ["けっさん","📊"],["ふっきん","💪"],["けっきん","🤒"],["わりびきけん","🎫"],
   ["にじかい","🍻"],["しゅっちょう","🧳"],["さぶすく","📱"],
-  ["ねんまつちょうせい","🧾"],["まいほーむ","🏡"],["ごしゅうぎ","💴"]
+  ["ねんまつちょうせい","🧾"],["まいほーむ","🏡"],["ごしゅうぎ","💴"],
+  ["えいや","🎲"],["がっちゃんこ","🔗"],["あじぇんだ","📋"],["たたきだい","🔨"],
+  ["ぽんちえ","📊"],["てれこ","🔀"],["よこぐし","🍢"],["よしなに","🤝"],
+  ["いってこい","🔄"],["おとしどころ","🎯"],["まきで","🌀"],["ぜろべーす","📉"],
+  ["いっちょうめいちばんち","🏠"],
+  ["ざっくばらん","🍶"],["がらがらぽん","🎰"],["けつかっちん","⏰"],["しゃんしゃん","🔔"]
 ].map(([w,e]) => ({ w, e, trap: w.endsWith("ん") }));
 
 const PACKS = { emoji: DICT, kanji: KANJI_DICT, bitter: BITTER_DICT };
@@ -544,6 +567,8 @@ const FIELD_MIN_ITEMS = 34;       // フィールドのアイテム数
 const MIN_ANSWERS = 3;            // つねに用意する正解の数
 const TRAP_CHANCE = 0.7;
 const FOV = 78 * Math.PI / 180;
+
+const PACK_LABELS = { emoji: "定番", kanji: "漢字", bitter: "サラリーマン" };
 
 /* pick: CPUの狙い方 min=安い言葉優先 max=高得点の言葉優先 */
 const DIFFS = {
@@ -1484,7 +1509,9 @@ function lassoMove(x, y){
     const a1 = Math.atan2(y - p.y, x - p.x);
     const w = (lasso.wind.get(it) || 0) + angDiff(a1 - a0);
     lasso.wind.set(it, w);
-    if (Math.abs(w) > 5.3) hits.push(it);
+    // 囲みの中にお題の言葉が入っていれば回収。ハズレは素通し(ペナルティなし)。
+    // ただしお題に一致するトラップは発動する (2026-07-17 レビュー反映)
+    if (Math.abs(w) > 5.3 && firstKana(it.word) === state.requiredKana) hits.push(it);
   }
   if (hits.length){
     if (now < state.stunUntil){
@@ -1895,6 +1922,7 @@ requestAnimationFrame(loop);
 
 /* ================= 開始 / 終了 ================= */
 let lastDiffKey = "normal";
+let pendingNext = null; // 結果画面の「次のステップ」導線
 function startGame(diffKey){
   lastDiffKey = diffKey;
   state.diff = DIFFS[diffKey];
@@ -1960,6 +1988,38 @@ function endGame(reason){
     (state.bestWord ? `<br>最長回収: <b style="color:#ffd966">${state.bestDisp}</b> (+${wordPoints(state.bestWord)})` : "") +
     `<br>通算成績: ${recordText()}`;
   document.getElementById("resultChain").textContent = state.chainLog.join(" → ");
+  // 次のステップへの導線 (勝てば昇格、激務クリアで転属、負ければ降格の打診)
+  pendingNext = null;
+  let nextComment = "", nextLabel = "";
+  if (you > cp){
+    if (lastDiffKey === "easy"){
+      pendingNext = { diff: "normal", pack: selectedPack };
+      nextComment = "「接待」課程を修了。次は「定時」が推奨されています。";
+      nextLabel = "「定時」で研修";
+    } else if (lastDiffKey === "normal"){
+      pendingNext = { diff: "hard", pack: selectedPack };
+      nextComment = "「定時」課程を修了。「激務」への昇格が内示されました。";
+      nextLabel = "「激務」で研修";
+    } else {
+      const order = ["emoji", "kanji", "bitter"];
+      const p2 = order[(order.indexOf(selectedPack) + 1) % order.length];
+      pendingNext = { diff: "hard", pack: p2 };
+      nextComment = `「激務」を修了。「${PACK_LABELS[p2]}」課程への転属が命じられました。`;
+      nextLabel = `「${PACK_LABELS[p2]}」へ転属`;
+    }
+  } else if (you < cp && lastDiffKey === "hard"){
+    pendingNext = { diff: "normal", pack: selectedPack };
+    nextComment = "「定時」への配置転換が検討されています。";
+    nextLabel = "「定時」で再研修";
+  } else if (you < cp && lastDiffKey === "normal"){
+    pendingNext = { diff: "easy", pack: selectedPack };
+    nextComment = "「接待」課程からやり直すことも可能です。";
+    nextLabel = "「接待」で再研修";
+  }
+  document.getElementById("nextComment").textContent = nextComment;
+  const btnNextEl = document.getElementById("btnNext");
+  btnNextEl.textContent = nextLabel;
+  btnNextEl.style.display = pendingNext ? "" : "none";
   startPanel.style.display = "none";
   resultPanel.style.display = "";
   overlayEl.classList.remove("hidden");
@@ -2023,6 +2083,15 @@ document.getElementById("btnRetry").addEventListener("click", () => {
   startGame(lastDiffKey);
 });
 document.getElementById("btnTop").addEventListener("click", goTop);
+/* 次のステップ: パック/難易度を切り替えて即研修 */
+document.getElementById("btnNext").addEventListener("click", () => {
+  if (!pendingNext) return;
+  selectedPack = pendingNext.pack;
+  for (const k of Object.keys(packBtns)) packBtns[k].classList.toggle("sel", k === selectedPack);
+  resultPanel.style.display = "none";
+  startPanel.style.display = "";
+  startGame(pendingNext.diff);
+});
 /* 降参: 1敗としてカウントしてTOPへ */
 document.getElementById("btnSurrender").addEventListener("click", () => {
   if (!state.running) return;
