@@ -545,7 +545,9 @@ const BITTER_DICT = [
   ["ぽんちえ","📊"],["てれこ","🔀"],["よこぐし","🍢"],["よしなに","🤝"],
   ["いってこい","🔄"],["おとしどころ","🎯"],["まきで","🌀"],["ぜろべーす","📉"],
   ["いっちょうめいちばんち","🏠"],
-  ["ざっくばらん","🍶"],["がらがらぽん","🎰"],["けつかっちん","⏰"],["しゃんしゃん","🔔"]
+  ["ざっくばらん","🍶"],["がらがらぽん","🎰"],["けつかっちん","⏰"],["しゃんしゃん","🔔"],
+  ["いいぶん","🗯"],["まんたん","⛽"],["まんいん","🚃"],["こつばん","🦴"],
+  ["こんいん","💍"],["くんれん","🏃"],["うんちん","🚃"],["りろん","📚"],["ちょきん","💰"]
 ].map(([w,e]) => ({ w, e, trap: w.endsWith("ん") }));
 
 const PACKS = { emoji: DICT, kanji: KANJI_DICT, bitter: BITTER_DICT };
@@ -564,8 +566,11 @@ function lastKana(w){
 const HOLD_MS = 650;              // ながおし時間
 const GAME_SECONDS = 90;
 const FIELD_MIN_ITEMS = 34;       // フィールドのアイテム数
-const MIN_ANSWERS = 3;            // つねに用意する正解の数
-const TRAP_CHANCE = 0.7;
+/* お題に対して常に維持する内訳 (2026-07-17 レビュー反映) */
+const TARGET_NORMAL = 2;          // ふつうの正解 (HIGH_LEN未満)
+const TARGET_HIGH = 2;            // 高得点正解 (HIGH_LEN以上)
+const TARGET_TRAPS = 2;           // 「ん」で終わるトラップ
+const HIGH_LEN = 5;               // 高得点とみなす文字数
 const FOV = 78 * Math.PI / 180;
 
 const PACK_LABELS = { emoji: "定番", kanji: "漢字", bitter: "サラリーマン" };
@@ -1172,25 +1177,36 @@ function validItems(){
 }
 
 function ensureAnswers(){
-  // お題のこたえを最低 MIN_ANSWERS こ フィールドに用意する
-  let valid = validItems().length;
-  while (valid < MIN_ANSWERS){
-    const cands = unusedEntries(d => !d.trap && firstKana(d.w) === state.requiredKana);
-    if (cands.length === 0) break;
-    spawnItem(cands[Math.floor(Math.random() * cands.length)]);
-    valid++;
-  }
+  // お題に対して「ふつう正解2・高得点正解2・トラップ2」を常時目標に補充する
+  // (辞書に足りない文字は 在庫のぶんだけ)
+  const isHigh = d => Array.from(d.w).length >= HIGH_LEN;
+  const fillFor = (pred, target, current) => {
+    let n = current;
+    while (n < target){
+      const cands = unusedEntries(d => firstKana(d.w) === state.requiredKana && pred(d));
+      if (!cands.length) break;
+      spawnItem(cands[Math.floor(Math.random() * cands.length)]);
+      n++;
+    }
+  };
+  const aliveMatch = aliveItems().filter(it => firstKana(it.word) === state.requiredKana);
+  fillFor(d => !d.trap && !isHigh(d), TARGET_NORMAL,
+    aliveMatch.filter(it => !it.trap && it.len < HIGH_LEN).length);
+  fillFor(d => !d.trap && isHigh(d), TARGET_HIGH,
+    aliveMatch.filter(it => !it.trap && it.len >= HIGH_LEN).length);
+  fillFor(d => d.trap, TARGET_TRAPS,
+    aliveMatch.filter(it => it.trap).length);
   if (validItems().length === 0){
     reshuffleKana();
     return;
   }
-  // トラップ (お題ではじまり「ん」でおわる) を混ぜる (最大2つ)
-  let trapCount = aliveItems().filter(it => it.trap && firstKana(it.word) === state.requiredKana).length;
-  while (trapCount < 2 && Math.random() < TRAP_CHANCE){
-    const traps = unusedEntries(d => d.trap && firstKana(d.w) === state.requiredKana);
-    if (!traps.length) break;
-    spawnItem(traps[Math.floor(Math.random() * traps.length)]);
-    trapCount++;
+  // 「ん」ダミーは お題と無関係でも 常に2つはフィールドに漂わせる
+  let trapsAny = aliveItems().filter(it => it.trap).length;
+  while (trapsAny < TARGET_TRAPS){
+    const cands = unusedEntries(d => d.trap);
+    if (!cands.length) break;
+    spawnItem(cands[Math.floor(Math.random() * cands.length)]);
+    trapsAny++;
   }
   // にぎやかし
   while (aliveItems().length < FIELD_MIN_ITEMS){
@@ -1929,9 +1945,6 @@ function startGame(diffKey){
   state.running = true;
   for (const it of state.items) freeItemTex(it);
   state.items = [];
-  state.usedWords = new Set(["しりとり"]);
-  state.requiredKana = "り";
-  state.chainLog = ["しりとり"];
   state.scoreYou = 0; state.scoreCpu = 0;
   state.streak = 0;
   state.timeLeft = GAME_SECONDS;
@@ -1947,6 +1960,20 @@ function startGame(diffKey){
   state.shake = null;
   state.dict = PACKS[selectedPack];
   lastSec = -1;
+  // 開始のお題はランダム (続く言葉が十分ある「開始語」を辞書から選ぶ)
+  const nonTrap = state.dict.filter(d => !d.trap);
+  let seed = null;
+  for (let tries = 0; tries < 60; tries++){
+    const cand = nonTrap[Math.floor(Math.random() * nonTrap.length)];
+    const k = lastKana(cand.w);
+    const supply = nonTrap.filter(d => d !== cand && firstKana(d.w) === k).length;
+    if (supply >= 3){ seed = cand; break; }
+    if (!seed && supply >= 1) seed = cand;
+  }
+  if (!seed) seed = nonTrap[0];
+  state.usedWords = new Set([seed.w]);
+  state.chainLog = [seed.k || seed.w];
+  state.requiredKana = lastKana(seed.w);
   cpuTrail.length = 0;
   updateCombo();
   state.yaw = 0; state.pitch = 0;
